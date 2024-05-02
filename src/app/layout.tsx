@@ -1,8 +1,11 @@
+
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
+
+import { NextUIProvider } from "@nextui-org/react";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -16,7 +19,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <NextUIProvider>
+          <div className="py-16 flex flex-col gap-4 justify-between items-center">
+            {children}
+            <div className="p-4 text-sm font-semibold">
+              Designed and Developed with 💖 By Takam Alex C.
+            </div>
+          </div>
+        </NextUIProvider>
+
+      </body>
     </html>
   );
 }
