@@ -1,11 +1,15 @@
 "use client"
 
+import {useRouter} from 'next/navigation'
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCamera } from '@fortawesome/free-solid-svg-icons'
 
 import { Button, Chip } from '@nextui-org/react';
 import React from 'react'
 import Webcam from "react-webcam"
+
+import { loginFetch } from '@/libs/utils';
 
 const videoConstraints = {
     width: 600,
@@ -15,9 +19,21 @@ const videoConstraints = {
 
 export default function () {
 
-    const [capturedImage, setCapturedImage] = React.useState("")
+    const [capturedImage, setCapturedImage] = React.useState("");
+
+    const [isAuthed, setIsAuthed] = React.useState<Boolean | null>(null);
+
+    const [authedUser, setAuthedUser] = React.useState({})
 
     const webcamRef = React.useRef(null);
+
+    
+
+    // const router = useRouter()
+
+    // React.useEffect(()=>{
+    //     if (isAuthed) router.push("/app")
+    // }, [isAuthed])
 
     const capture = React.useCallback(
         () => {
@@ -34,24 +50,21 @@ export default function () {
 
         e.preventDefault()
 
-        const reqHeaders = new Headers()
-        reqHeaders.append("Content-Type", "application/json")
+        await loginFetch(capturedImage).then((output) => {
+            console.log(output)
 
-        fetch("http://localhost:5000/login", {
-            body: JSON.stringify({ image: capturedImage }),
-            headers: reqHeaders,
-            method: "POST"
-        }).then(res => res.json()).then((jsonResponse) => {
-            console.log(jsonResponse)
+            setIsAuthed(output.authed);
+
+            if(output.authed) setAuthedUser(output)
+
         })
-
 
     }
 
     return (
         <main className='flex items-center justify-center'>
             <div className='flex flex-col gap-2'>
-                <div className='flex flex-row justify-between p-2'>
+               { (isAuthed == null || isAuthed == false) && <div className='flex flex-row justify-between p-2'>
                     <div className='flex flex-row gap-2 justify-center'>
                         <h1 className='text-2xl font-black'>FacialAuth</h1>
 
@@ -65,9 +78,13 @@ export default function () {
 
                     </div>
                     <h1 className='text-2x font-semibold'> Take a photo to login</h1>
-                </div>
+                </div>}
+                {
+                    (isAuthed == null || isAuthed == false) &&              
+                    
+                    
+                <form onSubmit={onLoginSubmit}>
 
-                <form>
                     <div className='relative flex flex-col'>
                         <Webcam
                             className="block rounded-2xl"
@@ -79,14 +96,24 @@ export default function () {
                             width={516}
                             videoConstraints={videoConstraints}
                         />
-                        <div className='flex flex-row justify-center absolute w-full bottom-2'>
-                            <Button size='lg' onClick={onLoginSubmit} variant='shadow' color='success' endContent={<FontAwesomeIcon icon={faCamera} />}>capture</Button>
+                        <div className='flex flex-row gap-2 items-center justify-center absolute w-full bottom-6'>
+                            <Button size='lg' onClick={capture} type='button' variant='shadow' color='success' endContent={<FontAwesomeIcon icon={faCamera} />}>capture</Button>
+                            <Button type='submit' isDisabled={capturedImage.length == 0}>Login</Button>
                         </div>
 
                     </div>
 
-
+                    
                 </form>
+                }
+                {
+                    isAuthed && 
+
+                    <div>
+                        {/* @ts-ignore */}
+                        Welcome back, {authedUser.username}
+                    </div>  
+                }
             </div>
 
         </main>

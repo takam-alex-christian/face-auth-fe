@@ -5,6 +5,7 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCamera } from '@fortawesome/free-solid-svg-icons'
 
+import { useRouter } from 'next/navigation';
 import { Button, Chip, Input, Image, Badge, Avatar} from '@nextui-org/react';
 import React from 'react'
 import Webcam from "react-webcam"
@@ -20,6 +21,10 @@ export default function () {
     const [capturedImages, setCapturedImages] = React.useState<Array<string>>([])
 
     const [username, setUsername] = React.useState<string>("")
+
+    const [isSuccess, setIsSuccess] = React.useState(false)
+    
+    const router = useRouter();
 
     const webcamRef = React.useRef(null);
 
@@ -37,6 +42,9 @@ export default function () {
         [webcamRef]
     );
 
+    React.useEffect(()=>{
+        if(isSuccess) router.push("/login")
+    }, [isSuccess])
     async function onSignupSubmit(e: React.FormEvent) {
 
         e.preventDefault()
@@ -44,12 +52,14 @@ export default function () {
         const reqHeaders = new Headers()
         reqHeaders.append("Content-Type", "application/json")
 
-        fetch("http://localhost:5000/signup", {
+        fetch("/backend_signup", {
             body: JSON.stringify({ username: username, images: capturedImages }),
             headers: reqHeaders,
             method: "POST"
         }).then(res => res.json()).then((jsonResponse) => {
             console.log(jsonResponse)
+
+            setIsSuccess(jsonResponse.success)
         })
 
 
@@ -86,7 +96,7 @@ export default function () {
                                 width={516}
                                 videoConstraints={videoConstraints}
                             />
-                            <div className='flex flex-row justify-center absolute w-full bottom-2'>
+                            <div className='flex flex-row justify-center absolute w-full bottom-6'>
                                 <Button size='lg' isIconOnly onClick={capture} variant='shadow' color='success' endContent={<FontAwesomeIcon icon={faCamera} />}></Button>
                             </div>
 
